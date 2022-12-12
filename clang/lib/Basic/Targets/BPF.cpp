@@ -78,6 +78,10 @@ void BPFTargetInfo::getTargetDefines(const LangOptions &Opts,
     Builder.defineMacro("__BPF_FEATURE_ST");
     Builder.defineMacro("__BPF_FEATURE_LOAD_ACQ_STORE_REL");
   }
+
+  if (HasSolanaFeature) {
+    Builder.defineMacro("__ELF__");
+  }
 }
 
 static constexpr llvm::StringLiteral ValidCPUNames[] = {"generic", "v1", "v2",
