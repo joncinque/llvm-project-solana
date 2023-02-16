@@ -63,7 +63,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(inputs.os_list) }}
+        os:
+          - ubuntu-latest
+          # Use windows-2019 due to:
+          # https://developercommunity.visualstudio.com/t/Prev-Issue---with-__assume-isnan-/1597317
+          - windows-2019
+          # We're using a specific version of macOS due to:
+          # https://github.com/actions/virtual-environments/issues/5900
+          - macOS-latest
     steps:
       # On Windows, starting with win19/20220814.1, cmake choose the 32-bit
       # python3.10.6 libraries instead of the 64-bit libraries when building
@@ -72,7 +79,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
         with:
-          python-version: ${{ inputs.python_version }}
+          python-version: '3.11'
+      - name: Install homebrew packages
+        if: startsWith(matrix.os, 'macOS')
+        run: |
+          brew rm swig
+          brew install swig@3
+          brew link swig@3
       # actions/checkout deletes any existing files in the new git directory,
       # so this needs to either run before ccache-action or it has to use
       # clean: false.
@@ -94,7 +107,7 @@ jobs:
           key: ${{ matrix.os }}
           variant: sccache
       - name: Build and Test
-        if: "!startsWith(matrix.os, 'windows') || inputs.projects != 'lld'"
+        if: "!startsWith(matrix.os, 'windows')"
         uses: llvm/actions/build-test-llvm-project@main
         env:
           # Workaround for https://github.com/actions/virtual-environments/issues/5900.
@@ -133,9 +146,7 @@ jobs:
           ninja -C "$builddir" '${{ inputs.build_target }}'
 
       - name: Build and Test libclc
-        if: "!startsWith(matrix.os, 'windows') && contains(inputs.projects, 'libclc')"
-        env:
-          LLVM_BUILDDIR: ${{ steps.build-llvm.outputs.llvm-builddir }}
+        if: "!startsWith(matrix.os, 'windows') && !startsWith(matrix.os, 'macOS') && contains(inputs.projects, 'libclc')"
         run: |
           # The libclc tests don't have a generated check target so all we can
           # do is build it.
