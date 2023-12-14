@@ -190,6 +190,7 @@ endif()
 include_directories(BEFORE
   ${CMAKE_CURRENT_BINARY_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/../zig/lib/unwind/include
   )
 
 if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
@@ -214,7 +215,9 @@ if (MSVC)
 endif()
 
 add_subdirectory(Common)
-add_subdirectory(tools/lld)
+if (LLD_BUILD_TOOLS)
+  add_subdirectory(tools/lld)
+endif()
 
 if (LLVM_INCLUDE_TESTS)
   add_subdirectory(test)
