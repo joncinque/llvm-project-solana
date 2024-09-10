@@ -93,7 +93,9 @@ if (APPLE)
 
   target_link_libraries(${TARGET_NAME}
     PRIVATE
-    "-Wl,-sectcreate,__TEXT,__info_plist,\"${TOOL_INFO_PLIST_OUT}\"")
+    # TODO Restore once zig cc supports `-sectcreate` https://github.com/ziglang/zig/issues/17026
+    #"-Wl,-sectcreate,__TEXT,__info_plist,\"${TOOL_INFO_PLIST_OUT}\"")
+    "-Wl")
   configure_file("${TOOL_INFO_PLIST}.in" "${TOOL_INFO_PLIST_OUT}" @ONLY)
 
   set(TOOL_INFO_UTI)
