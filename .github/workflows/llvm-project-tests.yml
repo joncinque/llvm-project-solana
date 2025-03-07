@@ -71,11 +71,6 @@ jobs:
           # We're using a specific version of macOS due to:
           # https://github.com/actions/virtual-environments/issues/5900
           - macOS-latest
-        include:
-          - compile_cache: sccache
-
-          - compile_cache: ccache
-            os: macos-latest
     steps:
       # On Windows, starting with win19/20220814.1, cmake choose the 32-bit
       # python3.10.6 libraries instead of the 64-bit libraries when building
@@ -109,8 +104,8 @@ jobs:
           # fit under the 10 GB limit.
           # Default to 2G to workaround: https://github.com/hendrikmuhs/ccache-action/issues/174
           max-size: 2G
-          key: ${{ matrix.compile_cache }}-${{ matrix.os }}
-          variant: ${{ matrix.compile_cache }}
+          key: ${{ matrix.os }}
+          variant: sccache
       - name: Build and Test
         if: "!startsWith(matrix.os, 'windows')"
         env:
@@ -151,6 +146,8 @@ jobs:
 
       - name: Build and Test libclc
         if: "!startsWith(matrix.os, 'windows') && !startsWith(matrix.os, 'macOS') && contains(inputs.projects, 'libclc')"
+        env:
+          LLVM_BUILDDIR: ${{ steps.build-llvm.outputs.llvm-builddir }}
         run: |
           # The libclc tests don't have a generated check target so all we can
           # do is build it.
