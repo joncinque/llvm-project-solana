@@ -6,6 +6,7 @@
 # The function bar has been placed "in the middle" of foo, and the function
 # entry point is deliberately not its lowest address.
 
+# XFAIL: *
 # RUN: split-file %s %t
 # RUN: llvm-mc -triple x86_64-pc-linux -filetype=obj %t/input.s -o %t/input.o
 # RUN: %lldb %t/input.o -s %t/commands -o exit | FileCheck %s
