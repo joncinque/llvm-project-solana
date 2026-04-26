@@ -134,7 +134,7 @@ void SBFPassConfig::addIRPasses() {
 
 TargetTransformInfo
 SBFTargetMachine::getTargetTransformInfo(const Function &F) const {
-  return TargetTransformInfo(SBFTTIImpl(this, F));
+  return TargetTransformInfo(std::make_unique<SBFTTIImpl>(this, F));
 }
 
 MachineFunctionInfo *SBFTargetMachine::createMachineFunctionInfo(

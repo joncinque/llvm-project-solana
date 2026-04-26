@@ -43,7 +43,7 @@ protected:
 
   SBFInstrInfoTest() {
     std::string Error;
-    auto TT(Triple::normalize(GetParam()));
+    Triple TT(GetParam());
     const Target *TheTarget = TargetRegistry::lookupTarget(TT, Error);
     TargetOptions Options;
 
@@ -135,7 +135,7 @@ TEST_P(SBFInstrInfoTest, IsStoreToStackSlot) {
                          .addImm(0)
                          .getInstr();
   int FI = 0;
-  unsigned Mem = 0;
+  auto Mem = TypeSize::getZero();
   auto MI1Res = TII->isStoreToStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), SBF::R1);
   EXPECT_EQ(FI, 10);
@@ -147,7 +147,7 @@ TEST_P(SBFInstrInfoTest, IsStoreToStackSlot) {
            .addImm(0)
            .getInstr();
   FI = 0;
-  Mem = 0;
+  Mem = TypeSize::getZero();
   MI1Res = TII->isStoreToStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), SBF::R2);
   EXPECT_EQ(FI, 17);
@@ -159,7 +159,7 @@ TEST_P(SBFInstrInfoTest, IsStoreToStackSlot) {
            .addImm(0)
            .getInstr();
   FI = 0;
-  Mem = 0;
+  Mem = TypeSize::getZero();
   MI1Res = TII->isStoreToStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), SBF::R2);
   EXPECT_EQ(FI, 15);
@@ -171,7 +171,7 @@ TEST_P(SBFInstrInfoTest, IsStoreToStackSlot) {
            .addImm(0)
            .getInstr();
   FI = 0;
-  Mem = 0;
+  Mem = TypeSize::getZero();
   MI1Res = TII->isStoreToStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), SBF::R5);
   EXPECT_EQ(FI, 18);
@@ -183,7 +183,7 @@ TEST_P(SBFInstrInfoTest, IsStoreToStackSlot) {
            .addImm(0)
            .getInstr();
   FI = 0;
-  Mem = 0;
+  Mem = TypeSize::getZero();
   MI1Res = TII->isStoreToStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), 0u);
 }
@@ -197,7 +197,7 @@ TEST_P(SBFInstrInfoTest, IsLoadFromStackSlot) {
                          .addImm(0)
                          .getInstr();
   int FI = 0;
-  unsigned Mem = 0;
+  auto Mem = TypeSize::getZero();
   auto MI1Res = TII->isLoadFromStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), SBF::R1);
   EXPECT_EQ(FI, 10);
@@ -208,7 +208,7 @@ TEST_P(SBFInstrInfoTest, IsLoadFromStackSlot) {
            .addImm(0)
            .getInstr();
   FI = 0;
-  Mem = 0;
+  Mem = TypeSize::getZero();
   MI1Res = TII->isLoadFromStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), SBF::R2);
   EXPECT_EQ(FI, 17);
@@ -219,7 +219,7 @@ TEST_P(SBFInstrInfoTest, IsLoadFromStackSlot) {
            .addImm(0)
            .getInstr();
   FI = 0;
-  Mem = 0;
+  Mem = TypeSize::getZero();
   MI1Res = TII->isLoadFromStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), SBF::R2);
   EXPECT_EQ(FI, 15);
@@ -231,7 +231,7 @@ TEST_P(SBFInstrInfoTest, IsLoadFromStackSlot) {
            .addImm(0)
            .getInstr();
   FI = 0;
-  Mem = 0;
+  Mem = TypeSize::getZero();
   MI1Res = TII->isLoadFromStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), SBF::R5);
   EXPECT_EQ(FI, 18);
@@ -243,7 +243,7 @@ TEST_P(SBFInstrInfoTest, IsLoadFromStackSlot) {
            .addImm(0)
            .getInstr();
   FI = 0;
-  Mem = 0;
+  Mem = TypeSize::getZero();
   MI1Res = TII->isLoadFromStackSlot(*MI, FI, Mem);
   EXPECT_EQ(MI1Res.id(), 0u);
 }

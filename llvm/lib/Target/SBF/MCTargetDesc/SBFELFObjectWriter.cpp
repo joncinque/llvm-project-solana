@@ -26,11 +26,10 @@ public:
   ~SBFELFObjectWriter() override = default;
 
 protected:
-  unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
-                        const MCFixup &Fixup, bool IsPCRel) const override;
+  unsigned getRelocType(const MCFixup &Fixup, const MCValue &Target,
+                        bool IsPCRel) const override;
 
-  bool needsRelocateWithSymbol(const MCValue &Val, const MCSymbol &Sym,
-                               unsigned Type) const override;
+  bool needsRelocateWithSymbol(const MCValue &Val, unsigned Type) const override;
 private:
   bool relocAbs64;
 };
@@ -42,7 +41,6 @@ private:
 // the symbol being relocated).  Forcing a relocation with a symbol
 // will result in the symbol's index being used in the .o file instead.
 bool SBFELFObjectWriter::needsRelocateWithSymbol(const MCValue &Val,
-                                                 const MCSymbol &Sym,
                                                  unsigned Type) const {
   return true;
 }
@@ -52,8 +50,8 @@ SBFELFObjectWriter::SBFELFObjectWriter(uint8_t OSABI, bool relocAbs64)
                             /*HasRelocationAddend*/ false),
       relocAbs64(relocAbs64) {}
 
-unsigned SBFELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
-                                          const MCFixup &Fixup,
+unsigned SBFELFObjectWriter::getRelocType(const MCFixup &Fixup,
+                                          const MCValue &Target,
                                           bool IsPCRel) const {
   // determine the type of the relocation
   switch (Fixup.getKind()) {
@@ -62,18 +60,13 @@ unsigned SBFELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
   case FK_SecRel_8:
     // LD_imm64 instruction.
     return ELF::R_SBF_64_64;
-  case FK_PCRel_4:
-    // CALL instruction.
-    return ELF::R_SBF_64_32;
-  case FK_PCRel_2:
-    // Branch instruction.
-    Ctx.reportError(Fixup.getLoc(), "2-byte relocations not supported");
-    return ELF::R_SBF_NONE;
   case FK_Data_8:
     return relocAbs64 ? ELF::R_SBF_64_ABS64 : ELF::R_SBF_64_64;
   case FK_Data_4:
-    if (const MCSymbolRefExpr *A = Target.getSymA()) {
-      const MCSymbol &Sym = A->getSymbol();
+    if (Fixup.isPCRel()) // CALL instruction
+      return ELF::R_SBF_64_32;
+    if (const auto *A = Target.getAddSym()) {
+      const MCSymbol &Sym = *A;
 
       if (Sym.isDefined()) {
         MCSection &Section = Sym.getSection();
@@ -104,6 +97,14 @@ unsigned SBFELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
       }
     }
     return ELF::R_SBF_64_32;
+  case FK_Data_2:
+    if (Fixup.isPCRel()) {
+      // Branch instruction.
+      reportError(Fixup.getLoc(), "2-byte relocations not supported");
+      return ELF::R_SBF_NONE;
+    } else {
+      llvm_unreachable("invalid fixup kind!");
+    }
   }
 }
 

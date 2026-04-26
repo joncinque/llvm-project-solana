@@ -68,8 +68,8 @@ void SBFInstrInfo::initializeTargetFeatures(bool HasExplicitSext, bool NewMemEnc
 
 void SBFInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
                                MachineBasicBlock::iterator I,
-                               const DebugLoc &DL, MCRegister DestReg,
-                               MCRegister SrcReg, bool KillSrc,
+                               const DebugLoc &DL, Register DestReg,
+                               Register SrcReg, bool KillSrc,
                                bool RenamableDest, bool RenamableSrc) const {
   if (SBF::GPRRegClass.contains(DestReg, SrcReg))
     BuildMI(MBB, I, DL, get(SBF::MOV_rr), DestReg)
@@ -114,13 +114,13 @@ void SBFInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
 
 Register SBFInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
                                           int &FrameIndex,
-                                          unsigned &MemBytes) const {
+                                          TypeSize &MemBytes) const {
   switch (MI.getOpcode()) {
   default:
     break;
   case SBF::STD_V2:
   case SBF::STD_V1:
-    MemBytes = 8;
+    MemBytes = TypeSize::getFixed(8);
     if (MI.getOperand(0).isReg() && MI.getOperand(1).isFI() &&
         MI.getOperand(2).isImm() && MI.getOperand(2).getImm() == 0) {
       FrameIndex = MI.getOperand(1).getIndex();
@@ -129,7 +129,7 @@ Register SBFInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
     break;
   case SBF::STW32_V2:
   case SBF::STW32_V1:
-    MemBytes = 4;
+    MemBytes = TypeSize::getFixed(4);
     if (MI.getOperand(0).isReg() && MI.getOperand(1).isFI() &&
         MI.getOperand(2).isImm() && MI.getOperand(2).getImm() == 0) {
       FrameIndex = MI.getOperand(1).getIndex();
@@ -143,7 +143,7 @@ Register SBFInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
 
 Register SBFInstrInfo::isStoreToStackSlot(const MachineInstr &MI,
                                           int &FrameIndex) const {
-  unsigned MemBytes = 0;
+  auto MemBytes = TypeSize::getZero();
   return isStoreToStackSlot(MI, FrameIndex, MemBytes);
 }
 
@@ -172,13 +172,13 @@ void SBFInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
 
 Register SBFInstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
                                            int &FrameIndex,
-                                           unsigned &MemBytes) const {
+                                           TypeSize &MemBytes) const {
   switch (MI.getOpcode()) {
   default:
     break;
   case SBF::LDD_V2:
   case SBF::LDD_V1:
-    MemBytes = 8;
+    MemBytes = TypeSize::getFixed(8);
     if (MI.getOperand(0).isReg() && MI.getOperand(1).isFI() &&
         MI.getOperand(2).isImm() && MI.getOperand(2).getImm() == 0) {
       FrameIndex = MI.getOperand(1).getIndex();
@@ -187,7 +187,7 @@ Register SBFInstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
     break;
   case SBF::LDW32_V2:
   case SBF::LDW32_V1:
-    MemBytes = 4;
+    MemBytes = TypeSize::getFixed(4);
     if (MI.getOperand(0).isReg() && MI.getOperand(1).isFI() &&
         MI.getOperand(2).isImm() && MI.getOperand(2).getImm() == 0) {
       FrameIndex = MI.getOperand(1).getIndex();
@@ -201,7 +201,7 @@ Register SBFInstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
 
 Register SBFInstrInfo::isLoadFromStackSlot(const MachineInstr &MI,
                                            int &FrameIndex) const {
-  unsigned MemBytes = 0;
+  auto MemBytes = TypeSize::getZero();
   return isLoadFromStackSlot(MI, FrameIndex, MemBytes);
 }
 

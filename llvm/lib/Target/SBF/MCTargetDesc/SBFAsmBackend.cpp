@@ -29,10 +29,9 @@ public:
         relocAbs64(STI.hasFeature(SBF::FeatureRelocAbs64)) {}
   ~SBFAsmBackend() override = default;
 
-  void applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
-                  const MCValue &Target, MutableArrayRef<char> Data,
-                  uint64_t Value, bool IsResolved,
-                  const MCSubtargetInfo *STI) const override;
+  void applyFixup(const MCFragment &, const MCFixup &, const MCValue &Target,
+                  MutableArrayRef<char> Data, uint64_t Value,
+                  bool IsResolved) override;
 
   std::unique_ptr<MCObjectTargetWriter>
   createObjectTargetWriter() const override;
@@ -42,8 +41,6 @@ public:
                                                     const override {
     return false;
   }
-
-  unsigned getNumFixupKinds() const override { return 1; }
 
   bool writeNopData(raw_ostream &OS, uint64_t Count,
                     const MCSubtargetInfo *STI) const override;
@@ -64,11 +61,11 @@ bool SBFAsmBackend::writeNopData(raw_ostream &OS, uint64_t Count,
   return true;
 }
 
-void SBFAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
+void SBFAsmBackend::applyFixup(const MCFragment &F, const MCFixup &Fixup,
                                const MCValue &Target,
                                MutableArrayRef<char> Data, uint64_t Value,
-                               bool IsResolved,
-                               const MCSubtargetInfo *STI) const {
+                               bool IsResolved) {
+  maybeAddReloc(F, Fixup, Target, Value, IsResolved);
   if (Fixup.getKind() == FK_SecRel_8) {
     // The Value is 0 for global variables, and the in-section offset
     // for static variables. Write to the immediate field of the inst.
@@ -76,11 +73,11 @@ void SBFAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
     support::endian::write<uint32_t>(&Data[Fixup.getOffset() + 4],
                                      static_cast<uint32_t>(Value),
                                      Endian);
-  } else if (Fixup.getKind() == FK_Data_4) {
+  } else if (Fixup.getKind() == FK_Data_4 && !Fixup.isPCRel()) {
     support::endian::write<uint32_t>(&Data[Fixup.getOffset()], Value, Endian);
   } else if (Fixup.getKind() == FK_Data_8) {
     support::endian::write<uint64_t>(&Data[Fixup.getOffset()], Value, Endian);
-  } else if (Fixup.getKind() == FK_PCRel_4) {
+  } else if (Fixup.getKind() == FK_Data_4 && Fixup.isPCRel()) {
     Value = (uint32_t)((Value - 8) / 8);
     if (Endian == endianness::little) {
       Data[Fixup.getOffset() + 1] = 0x10;
@@ -90,7 +87,7 @@ void SBFAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
       support::endian::write32be(&Data[Fixup.getOffset() + 4], Value);
     }
   } else {
-    assert(Fixup.getKind() == FK_PCRel_2);
+    assert(Fixup.getKind() == FK_Data_2 && Fixup.isPCRel());
 
     int64_t ByteOff = (int64_t)Value - 8;
     if (ByteOff > INT16_MAX * 8 || ByteOff < INT16_MIN * 8)
