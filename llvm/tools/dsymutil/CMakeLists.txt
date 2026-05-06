@@ -25,6 +25,7 @@ set(LLVM_LINK_COMPONENTS
   TargetParser
   )
 
+if (NOT APPLE)
 add_llvm_tool(dsymutil
   dsymutil.cpp
   BinaryHolder.cpp
@@ -49,3 +50,4 @@ if(APPLE AND NOT LLVM_TOOL_LLVM_DRIVER_BUILD)
 endif(APPLE AND NOT LLVM_TOOL_LLVM_DRIVER_BUILD)
 
 # target_link_libraries(dsymutil PRIVATE ${LLVM_ATOMIC_LIB})
+endif(NOT APPLE)
